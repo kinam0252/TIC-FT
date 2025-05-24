@@ -167,18 +167,14 @@
   function enforceAutoplayLoop(video) {
     // Play on load
     if (video.paused) video.play();
-    // Prevent pause
-    video.addEventListener('pause', function() {
-      if (!video.ended) video.play();
-    });
     // Always loop
     video.addEventListener('ended', function() {
       video.currentTime = 0;
       video.play();
     });
-    // Prevent seeking to pause
+    // Prevent seeking to pause only if not paused by user
     video.addEventListener('seeking', function() {
-      if (video.paused) video.play();
+      if (!video.paused) video.play();
     });
   }
 
