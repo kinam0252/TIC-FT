@@ -181,11 +181,27 @@
       if (video.paused) video.play();
     });
   }
-  // Apply to all current videos
-  document.querySelectorAll('video').forEach(enforceAutoplayLoop);
+
+  // 동영상 모두 동일하게 0초에서 시작
+  function syncAllVideos() {
+    const videos = document.querySelectorAll('video');
+    videos.forEach(v => {
+      try {
+        v.currentTime = 0;
+        v.play();
+      } catch (e) {}
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('video').forEach(enforceAutoplayLoop);
+    syncAllVideos();
+  });
+
   // Observe for dynamically added/replaced videos
   const observer = new MutationObserver(() => {
     document.querySelectorAll('video').forEach(enforceAutoplayLoop);
+    syncAllVideos();
   });
   observer.observe(document.body, { childList: true, subtree: true });
 </script>
