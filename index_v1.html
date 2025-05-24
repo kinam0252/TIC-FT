@@ -5,7 +5,7 @@
   <meta name="description" content="Temporal In-Context Fine-Tuning for Versatile Control of Video Diffusion Models">
   <meta name="keywords" content="Video Diffusion Models, Temporal In-Context, Fine-Tuning, Video Control">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cartoon to Video Demo</title>
+  <title>Temporal In-Context Fine-Tuning for Versatile Control of Video Diffusion Models</title>
 
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
@@ -18,31 +18,6 @@
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script defer src="./static/js/fontawesome.all.min.js"></script>
-
-  <style>
-    .media-row {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 32px;
-      margin-top: 40px;
-    }
-    .media-cell {
-      flex: 0 0 40vw;
-      max-width: 40vw;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .media-cell img, .media-cell video {
-      width: 100%;
-      height: auto;
-      object-fit: contain;
-      image-rendering: auto;
-      border-radius: 12px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    }
-  </style>
 </head>
 <body>
 
@@ -137,16 +112,44 @@
     <h2 class="title is-3">Image-to-5-Seconds (30fps, 150 frames)</h2>
     <p>All results are computed by RTX 3060 6GB laptop with 13B HY variant. (Videos compressed by h264crf18 to fit in GitHub repos.)</p>
     
-    <div class="media-row">
-      <div class="media-cell">
-        <img src="assets/CartoonToVideo/1-1.png" alt="Cartoon Input">
+    <div class="columns is-multiline is-centered" style="align-items: flex-start;">
+      <!-- Pair 1 -->
+      <div class="column is-one-quarter" style="display: flex; flex-direction: column; align-items: center;">
+        <figure class="image" style="max-width: 100%;">
+          <img src="assets/pair1_input.png" alt="Pair 1 Input" style="width: 100%; height: auto; object-fit: contain; image-rendering: auto;">
+        </figure>
       </div>
-      <div class="media-cell">
-        <video class="autoplay-loop-video" src="assets/CartoonToVideo/1-2.mp4" controls autoplay loop muted></video>
+      <div class="column is-one-quarter" style="display: flex; flex-direction: column; align-items: center;">
+        <figure class="image" style="max-width: 100%;">
+          <video class="autoplay-loop-video" src="assets/pair1_output.mp4" controls autoplay loop muted style="width: 100%; height: auto; object-fit: contain;"></video>
+        </figure>
+      </div>
+      <!-- Pair 2 (repeat same input/output for demonstration) -->
+      <div class="column is-one-quarter" style="display: flex; flex-direction: column; align-items: center;">
+        <figure class="image" style="max-width: 100%;">
+          <img src="assets/pair1_input.png" alt="Pair 2 Input (same as Pair 1 Input)" style="width: 100%; height: auto; object-fit: contain; image-rendering: auto;">
+        </figure>
+      </div>
+      <div class="column is-one-quarter" style="display: flex; flex-direction: column; align-items: center;">
+        <figure class="image" style="max-width: 100%;">
+          <video class="autoplay-loop-video" src="assets/pair1_output.mp4" controls autoplay loop muted style="width: 100%; height: auto; object-fit: contain;"></video>
+        </figure>
       </div>
     </div>
+    <script>
+      // 강제로 pause/ended 시 다시 재생
+      document.querySelectorAll('.autoplay-loop-video').forEach(function(video) {
+        video.addEventListener('pause', function() {
+          if (!video.ended) video.play();
+        });
+        video.addEventListener('ended', function() {
+          video.play();
+        });
+      });
+    </script>
   </div>
 </section>
+
 
 <section class="section" id="BibTeX">
   <div class="container is-max-desktop content">
@@ -154,33 +157,6 @@
     <pre><code>TBD</code></pre>
   </div>
 </section>
-
-<script>
-  function enforceAutoplayLoop(video) {
-    // Play on load
-    if (video.paused) video.play();
-    // Prevent pause
-    video.addEventListener('pause', function() {
-      if (!video.ended) video.play();
-    });
-    // Always loop
-    video.addEventListener('ended', function() {
-      video.currentTime = 0;
-      video.play();
-    });
-    // Prevent seeking to pause
-    video.addEventListener('seeking', function() {
-      if (video.paused) video.play();
-    });
-  }
-  // Apply to all current videos
-  document.querySelectorAll('video').forEach(enforceAutoplayLoop);
-  // Observe for dynamically added/replaced videos
-  const observer = new MutationObserver(() => {
-    document.querySelectorAll('video').forEach(enforceAutoplayLoop);
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-</script>
 
 </body>
 </html>
