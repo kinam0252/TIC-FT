@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="Spatiotemporal Skip Guidance for Enhanced Video Diffusion Sampling">
+  <meta name="keywords" content="Video Diffusion Models, Spatiotemporal Skip Guidance, Video Sampling">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title> Spatiotemporal Skip Guidance for Enhanced Video Diffusion Sampling</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+
+  <!-- CSS -->
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+  
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <script src="./static/js/bulma-carousel.min.js"></script>
+
+  <style>
+    .abstract-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .video-row {
+      display: flex;
+      justify-content: space-evenly;
+      align-items: center;
+      gap: 10px;
+      padding: 0 20px;
+    }
+    .video-container video {
+      max-width: 100%;
+      border-radius: 10px;
+    }
+    .custom-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .caption {
+      margin-top: 20px;
+      font-size: 1.1rem;
+      font-style: italic;
+      text-align: center;
+      color: #555;
+    }
+    .hero-background-video {
+      position: relative;
+      overflow: hidden;
+      color: white;
+    }
+    
+    .hero-background-video video {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -1;
+    }
+    
+    .hero-background-video .hero-body {
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* 다른 hero 섹션에는 영향 없음 */
+    .hero:not(.hero-background-video) {
+      z-index: auto;
+    }
+    
+    /* 다른 섹션에도 영향 없음 */
+    .section {
+      z-index: 0;
+      position: relative;
+    }
+
+  </style>
+</head>
+<body>
+  
+<section class="hero hero-background-video" style="height: 100vh;">
+  <style>
+    /* 비디오 하단 텍스트 스타일 */
+    .video-credit {
+      position: absolute; /* 위치를 비디오 영역 기준으로 설정 */
+      bottom: 10px; /* 비디오 하단에서 10px 위로 */
+      right: 10px; /* 비디오 오른쪽에서 10px 왼쪽으로 */
+      color: white; /* 텍스트 색상 흰색 */
+      font-size: 0.9rem; /* 텍스트 크기 설정 */
+      z-index: 2; /* 텍스트를 비디오 위에 배치 */
+      background-color: rgba(0, 0, 0, 0.5); /* 배경색 반투명 설정 */
+      padding: 5px 10px; /* 텍스트 주변 패딩 설정 */
+      border-radius: 5px; /* 둥근 테두리 설정 */
+      text-align: right; /* 텍스트를 오른쪽 정렬 */
+    }
+    /* 비디오 섹션 전체 설정 */
+    .hero-background-video {
+      height: 100vh !important; /* 섹션의 높이를 뷰포트와 일치 */
+      display: flex; /* Flexbox 사용 */
+      justify-content: center; /* 가로 중앙 정렬 */
+      align-items: center; /* 세로 중앙 정렬 */
+      position: relative; /* 위치 조정 */
+    }
+
+    /* 텍스트 설정 */
+    .hero-background-video .hero-body {
+      text-align: center; /* 텍스트 가로 중앙 정렬 */
+      color: white !important; /* 텍스트 색상 흰색 */
+      z-index: 1; /* 텍스트를 비디오 위에 배치 */
+      display: flex; /* Flexbox 사용 */
+      flex-direction: column; /* 세로 방향으로 정렬 */
+      justify-content: center; /* 세로 중앙 정렬 */
+      align-items: center; /* 가로 중앙 정렬 */
+      width: 100%; /* 텍스트 박스의 가로 크기를 전체로 설정 */
+      height: 100%; /* 텍스트 박스의 세로 크기를 전체로 설정 */
+      font-size: 1rem !important; /* 텍스트 크기를 현재의 절반으로 */
+    }
+    
+    /* 제목 크기 조정 */
+    .hero-background-video .publication-title {
+      font-size: 4rem !important; /* 제목 크기를 절반으로 */
+      color: white !important; /* 제목 텍스트 색상 흰색 */
+      margin-bottom: 10px; /* 아래 간격 */
+    }
+    
+    /* 저자 텍스트 크기 조정 */
+    .hero-background-video .publication-authors {
+      font-size: 1.5rem !important; 
+      margin-top: 10px;
+    }
+
+    .hero-background-video a {
+      color: white !important; /* 링크 텍스트 색상 흰색 */
+      text-decoration: none;
+    }
+
+    .hero-background-video a:hover {
+      color: lightgray !important; /* 링크 호버 색상 */
+    }
+
+    /* 비디오 설정 */
+    .hero-background-video video {
+      position: absolute; /* 비디오를 절대 위치로 설정 */
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%); /* 비디오를 섹션 중앙에 위치 */
+      width: 100%; /* 비디오의 가로 크기를 섹션에 맞춤 */
+      height: 100%; /* 비디오의 세로 크기를 맞춤 */
+      object-fit: cover; /* 비디오를 섹션 크기에 맞게 채움 */
+      z-index: -1; /* 비디오를 텍스트 뒤로 배치 */
+      opacity: 0.9; /* 비디오 투명도 설정 */
+    }
+  </style>
+
+  <!-- 비디오 하단 텍스트 추가 -->
+  <div class="video-credit">Video generated by Mochi+STG</div>
+  
+  <!-- 배경 비디오 추가 -->
+  <video autoplay muted playsinline>
+    <source src="assets/processed_background_highres.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+
+  <div class="hero-body">
+    <div class="custom-container">
+      <div>
+        <h1 class="title is-1 publication-title">
+          Spatiotemporal Skip Guidance<br>for Enhanced Video Diffusion Sampling
+        </h1>
+
+        <div class="is-size-5 publication-authors">
+          <span class="author-block">
+            <a href="https://junhahyung.github.io/" target="_blank" rel="noopener noreferrer">Junha Hyung*</a><sup>1</sup>,
+          </span>
+          <span class="author-block">
+            <a href="https://kinam0252.github.io/" target="_blank" rel="noopener noreferrer">Kinam Kim*</a><sup>1</sup>,
+          </span>
+          <span class="author-block">
+            <a href="https://susunghong.github.io/" target="_blank" rel="noopener noreferrer">Susung Hong</a><sup>2</sup>,
+          </span>
+          <span class="author-block">
+            <a href="https://emjay73.github.io/" target="_blank" rel="noopener noreferrer">Min-Jung Kim</a><sup>1</sup>,
+          </span>
+          <span class="author-block">
+            <a href="https://sites.google.com/site/jaegulchoo/" target="_blank" rel="noopener noreferrer">Jaegul Choo</a><sup>1</sup>,
+          </span>
+        </div>
+
+        <div class="is-size-6" style="margin-top: 5px;">*Equal contribution</div>
+      
+        <div class="is-size-5 publication-authors">
+          <span class="author-block"><sup>1</sup>KAIST AI</span>&nbsp;&nbsp;
+          <span class="author-block"><sup>2</sup>University of Washington</span>
+        </div>
+
+        <!-- Center CVPR 2025 text using flexbox -->
+        <div style="display: flex; justify-content: center; margin-top: 15px; margin-bottom: 15px;">
+          <div class="is-size-4 publication-venue" style="color: white !important; font-weight: 700;">
+            CVPR 2025
+          </div>
+        </div>
+        
+        <div class="publication-links" style="margin-top: 20px;">
+<!--           <span class="link-block">
+            <a href="link-to-paper.pdf" class="external-link button is-normal is-rounded is-dark">
+              <span class="icon">
+                <i class="fas fa-file-pdf"></i>
+              </span>
+              <span>Paper</span>
+            </a>
+          </span> -->
+          <span class="link-block">
+            <a href="https://github.com/junhahyung/STGuidance"
+               class="external-link button is-normal is-rounded is-dark">
+              <span class="icon">
+                  <i class="fab fa-github"></i>
+              </span>
+              <span>Code</span>
+            </a>
+          </span>
+          <span class="link-block">
+            <a href="https://arxiv.org/abs/2411.18664" class="external-link button is-normal is-rounded is-dark">
+              <span class="icon">
+                <i class="ai ai-arxiv"></i>
+              </span>
+              <span>arXiv</span>
+            </a>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+const video = document.querySelector('.hero-background-video video');
+
+video.addEventListener('timeupdate', () => {
+  if (video.currentTime >= video.duration - 0.1) {
+    // 끝에 가까워지면 바로 처음으로 이동
+    video.currentTime = 0; 
+    video.play(); // 즉시 재생
+  }
+});
+
+// 비디오 로드 완료 후 초기 재생 설정
+video.addEventListener('loadeddata', () => {
+  video.playbackRate = 1; // 재생 속도 설정
+  video.play();           // 자동 재생
+});
+</script>
+
+
+<section class="section">
+  <div class="custom-container">
+    <h2 class="title is-3 has-text-centered">Abstract</h2>
+    <div class="abstract-container">
+      <p class="content has-text-justified">
+        We introduce <strong>Spatiotemporal Skip Guidance (STG)</strong>, a simple training-free sampling guidance method for enhancing transformer-based video diffusion models.
+        STG employs an implicit weak model via self-perturbation, avoiding the need for external models or additional training. 
+        By selectively skipping spatiotemporal layers, STG produces an aligned, degraded version of the original model to boost sample quality without compromising diversity or dynamic degree. Our contributions include:<br><br>
+        <strong>(1) Introducing STG as an efficient, high-performing guidance technique for video diffusion models<br></strong>
+        <strong>(2) Eliminating the need for auxiliary models by simulating a weak model through layer skipping<br></strong>
+        <strong>(3) Enhancing video quality without compromising sample diversity or dynamics unlike CFG</strong>
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="hero is-light is-small">
+  <div class="hero-body">
+    <div class="container">
+      <h2 class="title is-4 has-text-centered">Mochi</h2>
+      <div id="results-carousel" class="carousel results-carousel">
+        <div class="item item-sample1">
+          <video poster="" id="sample1" autoplay controls muted loop playsinline height="100%">
+            <source src="assets/circle/mochi/sample1.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-sample2">
+          <video poster="" id="sample2" autoplay controls muted loop playsinline height="100%">
+            <source src="assets/circle/mochi/sample2.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-sample3">
+          <video poster="" id="sample3" autoplay controls muted loop playsinline height="100%">
+            <source src="assets/circle/mochi/sample3.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-sample4">
+          <video poster="" id="sample4" autoplay controls muted loop playsinline height="100%">
+            <source src="assets/circle/mochi/sample4.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-sample5">
+          <video poster="" id="sample5" autoplay controls muted loop playsinline height="100%">
+            <source src="assets/circle/mochi/sample5.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-sample6">
+          <video poster="" id="sample6" autoplay controls muted loop playsinline height="100%">
+            <source src="assets/circle/mochi/sample6.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-sample7">
+          <video poster="" id="sample7" autoplay controls muted loop playsinline height="100%">
+            <source src="assets/circle/mochi/sample7.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-sample8">
+          <video poster="" id="sample8" autoplay controls muted loop playsinline height="100%">
+            <source src="assets/circle/mochi/sample8.mp4" type="video/mp4">
+          </video>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+  
+<section class="hero is-light is-small">
+  <div class="hero-body">
+    <div class="container">
+      <h2 class="title is-4 has-text-centered">Stable-Video-Diffusion (SVD)</h2>
+      <div id="results-carouse2" class="carousel results-carousel">
+        <div class="item item-sample1">
+          <video poster="" id="sample1" autoplay controls muted loop playsinline height="100%">
+            <source src="assets/circle/SVD/sample1.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-sample2">
+          <video poster="" id="sample2" autoplay controls muted loop playsinline height="100%">
+            <source src="assets/circle/SVD/sample2.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-sample3">
+          <video poster="" id="sample3" autoplay controls muted loop playsinline height="100%">
+            <source src="assets/circle/SVD/sample3.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-sample4">
+          <video poster="" id="sample4" autoplay controls muted loop playsinline height="100%">
+            <source src="assets/circle/SVD/sample4.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-sample5">
+          <video poster="" id="sample5" autoplay controls muted loop playsinline height="100%">
+            <source src="assets/circle/SVD/sample5.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-sample6">
+          <video poster="" id="sample6" autoplay controls muted loop playsinline height="100%">
+            <source src="assets/circle/SVD/sample6.mp4" type="video/mp4">
+          </video>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="hero is-light is-small">
+  <div class="hero-body">
+    <div class="container">
+      <h2 class="title is-4 has-text-centered">Open-Sora</h2>
+      <div id="results-carouse3" class="carousel results-carousel">
+        <div class="item item-sample1">
+          <video poster="" id="sample1" autoplay controls muted loop playsinline height="100%">
+            <source src="assets/circle/Sora/sample1.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-sample2">
+          <video poster="" id="sample2" autoplay controls muted loop playsinline height="100%">
+            <source src="assets/circle/Sora/sample2.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-sample3">
+          <video poster="" id="sample3" autoplay controls muted loop playsinline height="100%">
+            <source src="assets/circle/Sora/sample3.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-sample4">
+          <video poster="" id="sample4" autoplay controls muted loop playsinline height="100%">
+            <source src="assets/circle/Sora/sample4.mp4" type="video/mp4">
+          </video>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="custom-container">
+    <h2 class="title is-3 has-text-centered">STG Enhancement Details</h2>
+    
+    <!-- 이미지와 캡션 추가 -->
+    <figure class="content has-text-centered" style="max-width: 800px; margin: 0 auto;">
+      <img src="assets/STG_conceptual.jpg" alt="Comparison between CFG and STG" style="width: 100%; height: auto; margin: 20px 0; border: 2px solid #ccc;">
+      <figcaption style="font-size: 0.85rem; color: #666; margin-top: 10px;">
+        Comparison between CFG and STG, with the band conceptually representing the noisy data manifold.
+      </figcaption>
+    </figure>
+
+    <div class="abstract-container">
+      <p class="content has-text-justified">
+        Spatiotemporal Skip Guidance (STG) improves video quality by selectively skipping residual blocks or attention layers. This approach simplifies outputs while preserving frame diversity and dynamics.
+      </p>
+      <p class="content has-text-justified">
+        <strong>Residual Skip:</strong> Skips entire residual blocks:
+      </p>
+      <p class="content has-text-centered">
+        \[
+        \text{Res}(z_l) = z_{l+1} = f_l(z_l) + z_l, \quad 
+        \text{Res}'(z_l) = z_{l+1} = z_l.
+        \]
+      </p>
+      <p class="content has-text-justified">
+        <strong>Attention Skip:</strong> Adjusts self-attention to simplify computation:
+      </p>
+      <p class="content has-text-centered">
+        \[
+        \text{SA}(Q, K, V) = \text{Softmax}\left(\frac{QK^T}{\sqrt{d}}\right)V = AV.
+        \]
+      </p>
+      <p class="content has-text-justified">
+        By introducing these simple yet effective modifications, STG avoids the need for additional training or auxiliary models, achieving high-quality video synthesis efficiently.
+      </p>
+    </div>
+  </div>
+</section>
+<section class="section">
+  <div class="custom-container">
+    <h2 class="title is-3 has-text-centered">Evaluation</h2>
+    <!-- Quantitative Results 섹션 -->
+    <h3 class="title is-4 has-text-centered" style="margin-top: 30px;">Quantitative Results</h3>
+
+    <!-- 표 1 -->
+    <div style="overflow-x: auto; max-width: 800px; margin: 0 auto;">
+      <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.9rem; text-align: center; border: 1px solid #ccc;">
+        <thead style="background-color: #f5f5f5;">
+          <tr>
+            <th>Models</th>
+            <th>Imaging Quality</th>
+            <th>Aesthetic Quality</th>
+            <th>Motion Smoothness</th>
+            <th>Dynamic Degree</th>
+            <th>Temporal Flickering</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Mochi (CFG)</td>
+            <td>0.524</td>
+            <td>0.507</td>
+            <td>0.985</td>
+            <td>0.87</td>
+            <td>0.976</td>
+          </tr>
+          <tr>
+            <td>Mochi (STG)</td>
+            <td><strong>0.628</strong></td>
+            <td><strong>0.554</strong></td>
+            <td><strong>0.988</strong></td>
+            <td>0.86</td>
+            <td><strong>0.978</strong></td>
+          </tr>
+          <!-- 테두리와 동일한 색상으로 구분선 추가 -->
+          <tr style="border-top: 1px solid #ccc;">
+            <td>Open-Sora (CFG)</td>
+            <td>0.561</td>
+            <td>0.493</td>
+            <td>0.982</td>
+            <td><strong>0.902</strong></td>
+            <td>0.975</td>
+          </tr>
+          <tr>
+            <td>Open-Sora (STG)</td>
+            <td><strong>0.606</strong></td>
+            <td><strong>0.509</strong></td>
+            <td><strong>0.987</strong></td>
+            <td>0.895</td>
+            <td>0.976</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="text-align: center; font-size: 0.85rem; color: #666;">Table 1. Quantitative results for Mochi and Open-Sora on VBench T2V benchmarks.</p>
+    </div>
+
+    <!-- 표 2 -->
+    <div style="overflow-x: auto; max-width: 800px; margin: 0 auto;">
+      <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.9rem; text-align: center; border: 1px solid #ccc;">
+        <thead style="background-color: #f5f5f5;">
+          <tr>
+            <th>Models</th>
+            <th>FVD (↓)</th>
+            <th>IS</th>
+            <th>Imaging Quality</th>
+            <th>Aesthetic Quality</th>
+            <th>Motion Smoothness</th>
+            <th>Dynamic Degree</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>SVD (CFG)</td>
+            <td>151.3</td>
+            <td>38.0</td>
+            <td>0.687</td>
+            <td>0.637</td>
+            <td>0.966</td>
+            <td>0.562</td>
+          </tr>
+          <tr>
+            <td>SVD (STG)</td>
+            <td><strong>128.7</strong></td>
+            <td><strong>38.5</strong></td>
+            <td><strong>0.694</strong></td>
+            <td><strong>0.639</strong></td>
+            <td><strong>0.968</strong></td>
+            <td><strong>0.694</strong></td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="text-align: center; font-size: 0.85rem; color: #666;">Table 2. Quantitative results for SVD on FVD, IS, and VBench I2V benchmarks.</p>
+    </div>
+    <!-- assets/fvd-iq.png 추가 -->
+    <figure class="content has-text-centered" style="max-width: 800px; margin: 0 auto;">
+      <img src="assets/fvd-iq.png" alt="Comparison of CFG and STG" style="width: 100%; height: auto; margin: 20px 0; border: 2px solid #ccc;">
+      <figcaption style="font-size: 0.85rem; color: #666; margin-top: 10px;">
+        Comparison of CFG and STG across varying scales in terms of Imaging Quality and FVD.
+      </figcaption>
+    </figure>
+    <!-- User Study 섹션 -->
+    <h3 class="title is-4 has-text-centered" style="margin-top: 30px;">User Study</h3>
+    <figure class="content has-text-centered" style="max-width: 800px; margin: 0 auto;">
+      <img src="assets/radar_chart.png" alt="User Study Results" style="width: 100%; height: auto; margin: 20px 0; border: 2px solid #ccc;">
+      <figcaption style="font-size: 0.85rem; color: #666; margin-top: 10px;">
+        User study results for STG on SVD and Mochi, using 700 prompts from EvalCrafter.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+  
+<!-- MathJax 라이브러리 추가 -->
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+  /* 수식 크기 조정 */
+  .MathJax {
+    font-size: 1.5rem; /* 수식 크기를 기본보다 두 배로 설정 */
+  }
+</style>
+
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>
+@article{hyung2024spatiotemporal,
+  title={Spatiotemporal Skip Guidance for Enhanced Video Diffusion Sampling},
+  author={Hyung, Junha and Kim, Kinam and Hong, Susung and Kim, Min-Jung and Choo, Jaegul},
+  journal={arXiv preprint arXiv:2411.18664},
+  year={2024}
+}
+    </code></pre>
+  </div>
+</section>
+
+  
+<!--
+<footer class="footer">
+  <div class="content has-text-centered">
+    <p></p>
+  </div>
+</footer>
+-->
+
+
+</body>
+</html>
