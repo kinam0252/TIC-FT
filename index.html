@@ -23,7 +23,7 @@
     .media-row {
       display: flex;
       justify-content: center;
-      align-items: flex-start;
+      align-items: stretch;
       gap: 32px;
       max-width: 1200px;
       margin: 40px auto 0 auto;
@@ -37,16 +37,40 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: stretch;
     }
   
     .media-cell img,
     .media-cell video {
       width: 100%;
-      height: auto;
+      height: 100%;
+      aspect-ratio: 1/1;
       object-fit: contain;
       image-rendering: auto;
       border-radius: 12px;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      max-height: 260px;
+      min-height: 0;
+    }
+  
+    /* INTERPOLATE row: force all cells to have the same height as the tallest image/video */
+    .media-row.interpolate-row {
+      align-items: stretch;
+    }
+    .media-row.interpolate-row .media-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: stretch;
+    }
+    .media-row.interpolate-row .media-cell img,
+    .media-row.interpolate-row .media-cell video {
+      height: 100%;
+      max-height: 260px;
+      min-height: 0;
+      width: 100%;
+      object-fit: contain;
+      aspect-ratio: 1/1;
     }
   
     /* 줄의 전체 너비는 유지하고, 한 줄에 있는 모든 셀은 균등 분배되게 */
@@ -65,6 +89,11 @@
       }
       .media-cell {
         width: 100% !important;
+      }
+      .media-row.interpolate-row .media-cell img,
+      .media-row.interpolate-row .media-cell video {
+        max-height: none;
+        aspect-ratio: auto;
       }
     }
   </style>  
@@ -240,7 +269,7 @@
     </div>
 
     <h2 class="title is-3" style="font-weight: bold; margin-top: 60px;">INTERPOLATE</h2>
-    <div class="media-row">
+    <div class="media-row interpolate-row">
       <div class="media-cell">
         <img src="assets/INTERPOLATE/1-1.png" alt="INTERPOLATE 1-1">
       </div>
