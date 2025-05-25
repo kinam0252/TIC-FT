@@ -444,6 +444,22 @@
           This formulation allows buffer frames to evolve naturally, creating a smooth transition between condition and target sequences.
         </p>
       </div>
+
+      <div class="equation">
+        <div class="equation-label">4. Inference</div>
+        <p>
+          At each global timestep \(t\), the model identifies frames with the current noise level and selectively denoises only those frames:
+          \[
+          \mathbf{T}(\mathbf{z}^{(T)}) = [0, \tilde{\tau}_1, \ldots, \tilde{\tau}_B, T, \ldots, T]
+          \]
+          \[
+          \mathbf{T}(\mathbf{z}^{(t)}) = [0, \tau_1(t), \ldots, \tau_B(t), t, \ldots, t]
+          \quad \text{where} \quad \tau_b(t) = \min(t, \tilde{\tau}_b)
+          \]
+          This step-wise denoising continues from \(t = T\) down to \(t = 0\), preserving the condition frames and ensuring a smooth noise transition across buffer and target frames.
+        </p>
+      </div>
+      
     </div>
   </div>
 </section>
