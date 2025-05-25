@@ -24,10 +24,10 @@
       display: flex;
       justify-content: center;
       align-items: flex-start;
-      gap: 32px;
+      gap: 16px;
       max-width: 1200px;
-      margin: 40px auto 0 auto;
-      padding: 0 16px;
+      margin: 20px auto 0 auto;
+      padding: 0 8px;
       width: 100%;
     }
   
@@ -45,23 +45,24 @@
       height: auto;
       object-fit: contain;
       image-rendering: auto;
-      border-radius: 12px;
+      border-radius: 0;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     }
   
     /* 줄의 전체 너비는 유지하고, 한 줄에 있는 모든 셀은 균등 분배되게 */
     .media-row.two-columns .media-cell {
-      width: calc((100% - 32px) / 2);
+      width: calc((100% - 16px) / 2);
     }
   
     .media-row.three-columns .media-cell {
-      width: calc((100% - 2 * 32px) / 3);
+      width: calc((100% - 2 * 16px) / 3);
     }
   
     /* 반응형 대응 */
     @media screen and (max-width: 768px) {
       .media-row {
         flex-direction: column;
+        gap: 16px;
       }
       .media-cell {
         width: 100% !important;
