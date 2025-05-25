@@ -359,6 +359,34 @@
   </div>
 </section>
 
+<section class="section" id="Method">
+  <div class="container is-max-desktop content">
+    <h2 class="title is-3">Main Method: Temporal In-Context Fine-Tuning (TIC-FT)</h2>
+    <p>
+      TIC-FT is a simple and effective method for conditional video generation. It temporally concatenates clean condition frames, buffer frames with gradually increasing noise, and pure noise target frames. This design preserves temporal coherence and minimizes distribution mismatch during fine-tuning.
+    </p>
+
+    <h4><strong>Key Formulations</strong></h4>
+    <p>
+      <strong>1. Temporal Concatenation:</strong><br>
+      <code>z<sup>(t)</sup> = [ z̄<sup>(0)</sup><sub>1:L</sub> ∥ ẑ<sup>(t)</sup><sub>L+1:L+K</sub> ]</code>
+    </p>
+    <p>
+      <strong>2. Buffer Frames:</strong><br>
+      <code>τ̃<sub>b</sub> = (b / (B+1)) · T</code> for <code>b = 1,...,B</code><br>
+      <code>z<sup>(T)</sup> = [ z̄<sup>(0)</sup> ∥ z̃<sup>(τ̃<sub>1:B</sub>)</sup> ∥ ẑ<sup>(T)</sup> ]</code>
+    </p>
+    <p>
+      <strong>3. Loss Function:</strong><br>
+      <code>𝓛 = (1 / K) · Σ<sub>i=L+B+1</sub><sup>L+B+K</sup> ‖ ε<sub>i</sub> − ε̂<sub>i</sub> ‖²</code>
+    </p>
+    <p>
+      Only the target frames contribute to the training loss, while buffer frames evolve naturally to bridge condition and target sequences.
+    </p>
+  </div>
+</section>
+
+
 <section class="section" id="BibTeX">
   <div class="container is-max-desktop content">
     <h2 class="title">BibTeX</h2>
