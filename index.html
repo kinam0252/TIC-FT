@@ -25,15 +25,15 @@
       justify-content: center;
       align-items: flex-start;
       gap: 32px;
-      width: 100%;
       max-width: 1200px;
       margin: 40px auto 0 auto;
-      padding: 0 16px; /* 좌우 여백 추가 */
+      padding: 0 16px;
+      width: 100%;
     }
   
     .media-cell {
-      flex: 1 1 0;
-      min-width: 0;
+      flex: 1;
+      max-width: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -49,11 +49,22 @@
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     }
   
-    /* Optional: ensure the video doesn't overflow on small screens */
+    /* 줄의 전체 너비는 유지하고, 한 줄에 있는 모든 셀은 균등 분배되게 */
+    .media-row.two-columns .media-cell {
+      width: calc((100% - 32px) / 2);
+    }
+  
+    .media-row.three-columns .media-cell {
+      width: calc((100% - 2 * 32px) / 3);
+    }
+  
+    /* 반응형 대응 */
     @media screen and (max-width: 768px) {
       .media-row {
         flex-direction: column;
-        align-items: center;
+      }
+      .media-cell {
+        width: 100% !important;
       }
     }
   </style>  
