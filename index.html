@@ -16,6 +16,10 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
   <link rel="stylesheet" href="./static/css/index.css">
 
+  <!-- MathJax -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script defer src="./static/js/fontawesome.all.min.js"></script>
 
@@ -67,6 +71,30 @@
       .media-cell {
         width: 100% !important;
       }
+    }
+
+    /* Method section styling */
+    .method-section {
+      margin: 2rem 0;
+    }
+    .method-section h4 {
+      margin: 1.5rem 0 1rem 0;
+      color: #363636;
+    }
+    .method-section p {
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+    .equation {
+      margin: 1.5rem 0;
+      padding: 1rem;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+    }
+    .equation-label {
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      color: #363636;
     }
   </style>  
 </head>
@@ -362,27 +390,61 @@
 <section class="section" id="Method">
   <div class="container is-max-desktop content">
     <h2 class="title is-3">Main Method: Temporal In-Context Fine-Tuning (TIC-FT)</h2>
-    <p>
-      TIC-FT is a simple and effective method for conditional video generation. It temporally concatenates clean condition frames, buffer frames with gradually increasing noise, and pure noise target frames. This design preserves temporal coherence and minimizes distribution mismatch during fine-tuning.
-    </p>
+    
+    <div class="method-section">
+      <p>
+        TIC-FT is a simple yet powerful approach for conditional video generation. The method's core innovation lies in its temporal concatenation strategy, which combines three key components:
+      </p>
+      <ul>
+        <li>Clean condition frames that provide the initial context</li>
+        <li>Buffer frames with gradually increasing noise levels</li>
+        <li>Pure noise target frames for generation</li>
+      </ul>
+      <p>
+        This carefully designed architecture ensures temporal coherence throughout the sequence while minimizing distribution mismatch during the fine-tuning process.
+      </p>
+    </div>
 
     <h4><strong>Key Formulations</strong></h4>
-    <p>
-      <strong>1. Temporal Concatenation:</strong><br>
-      <code>z<sup>(t)</sup> = [ z̄<sup>(0)</sup><sub>1:L</sub> ∥ ẑ<sup>(t)</sup><sub>L+1:L+K</sub> ]</code>
-    </p>
-    <p>
-      <strong>2. Buffer Frames:</strong><br>
-      <code>τ̃<sub>b</sub> = (b / (B+1)) · T</code> for <code>b = 1,...,B</code><br>
-      <code>z<sup>(T)</sup> = [ z̄<sup>(0)</sup> ∥ z̃<sup>(τ̃<sub>1:B</sub>)</sup> ∥ ẑ<sup>(T)</sup> ]</code>
-    </p>
-    <p>
-      <strong>3. Loss Function:</strong><br>
-      <code>𝓛 = (1 / K) · Σ<sub>i=L+B+1</sub><sup>L+B+K</sup> ‖ ε<sub>i</sub> − ε̂<sub>i</sub> ‖²</code>
-    </p>
-    <p>
-      Only the target frames contribute to the training loss, while buffer frames evolve naturally to bridge condition and target sequences.
-    </p>
+    
+    <div class="method-section">
+      <div class="equation">
+        <div class="equation-label">1. Temporal Concatenation</div>
+        <p>
+          The basic temporal concatenation combines condition frames with target frames:
+          \[
+          \mathbf{z}^{(t)} = [\bar{\mathbf{z}}^{(0)}_{1:L} \parallel \hat{\mathbf{z}}^{(t)}_{L+1:L+K}]
+          \]
+          where \(\bar{\mathbf{z}}^{(0)}\) represents clean condition frames and \(\hat{\mathbf{z}}^{(t)}\) represents noisy target frames.
+        </p>
+      </div>
+
+      <div class="equation">
+        <div class="equation-label">2. Buffer Frames</div>
+        <p>
+          Buffer frames are inserted with noise levels that gradually increase:
+          \[
+          \tilde{\tau}_b = \frac{b}{B+1} \cdot T \quad \text{for} \quad b = 1,\ldots,B
+          \]
+          The complete sequence with buffer frames is then:
+          \[
+          \mathbf{z}^{(T)} = [\bar{\mathbf{z}}^{(0)} \parallel \tilde{\mathbf{z}}^{(\tilde{\tau}_{1:B})} \parallel \hat{\mathbf{z}}^{(T)}]
+          \]
+          where \(\tilde{\mathbf{z}}^{(\tilde{\tau}_{1:B})}\) represents the buffer frames with interpolated noise levels.
+        </p>
+      </div>
+
+      <div class="equation">
+        <div class="equation-label">3. Loss Function</div>
+        <p>
+          The training loss is computed only on the target frames:
+          \[
+          \mathcal{L} = \frac{1}{K} \sum_{i=L+B+1}^{L+B+K} \|\boldsymbol{\epsilon}_i - \hat{\boldsymbol{\epsilon}}_i\|^2
+          \]
+          This formulation allows buffer frames to evolve naturally, creating a smooth transition between condition and target sequences.
+        </p>
+      </div>
+    </div>
   </div>
 </section>
 
