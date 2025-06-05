@@ -177,3 +177,4 @@ validation_dataset/
 wan-framepack/
 
 !requirements.txt
+dataset/
