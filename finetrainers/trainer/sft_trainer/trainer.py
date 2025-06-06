@@ -458,6 +458,7 @@ class SFTTrainer(Trainer):
                         latent_model_conditions=latent_model_conditions,
                         sigmas=sigmas,
                         compute_posterior=compute_posterior,
+                        latent_partition_mode=self.args.latent_partition_mode,
                     )
 
                 timesteps = (sigmas * 1000.0).long()
@@ -468,6 +469,18 @@ class SFTTrainer(Trainer):
                     flow_weighting_scheme=self.args.flow_weighting_scheme,
                 )
                 weights = utils.expand_tensor_dims(weights, pred.ndim)
+
+                from finetrainers.buffer_config.util import parse_partition_string
+                latent_partition_config = parse_partition_string(self.args.latent_partition_mode)
+                condition_count = latent_partition_config["condition"]
+                buffer_count = latent_partition_config["buffer"]
+                target_count = latent_partition_config["target"]
+                
+                if self.args.model_name == "cogvideox":
+                    pred = pred[:, condition_count+buffer_count:]
+                    target = target[:, condition_count+buffer_count:]
+                else:
+                    raise ValueError(f"Model name {self.args.model_name} not supported")
 
                 # 4. Compute loss & backward pass
                 with self.tracker.timed("timing/backward"):
@@ -630,7 +643,7 @@ class SFTTrainer(Trainer):
             validation_data = validation_data[0]
             with self.attention_provider_ctx(training=False):
                 validation_artifacts = self.model_specification.validation(
-                    pipeline=pipeline, generator=generator, **validation_data
+                    pipeline=pipeline, generator=generator, latent_partition_mode=self.args.latent_partition_mode, **validation_data
                 )
 
             if dp_local_rank != 0:

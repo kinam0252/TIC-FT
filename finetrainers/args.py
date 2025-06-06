@@ -433,6 +433,7 @@ class BaseArgs:
     resume_from_checkpoint: Optional[str] = None
     enable_slicing: bool = False
     enable_tiling: bool = False
+    latent_partition_mode: Optional[str] = None
 
     # Optimizer arguments
     optimizer: str = "adamw"
@@ -562,6 +563,7 @@ class BaseArgs:
             "resume_from_checkpoint": self.resume_from_checkpoint,
             "enable_slicing": self.enable_slicing,
             "enable_tiling": self.enable_tiling,
+            "latent_partition_mode": self.latent_partition_mode,
         }
         training_arguments = get_non_null_items(training_arguments)
 
@@ -803,6 +805,7 @@ def _add_training_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--resume_from_checkpoint", type=str, default=None)
     parser.add_argument("--enable_slicing", action="store_true")
     parser.add_argument("--enable_tiling", action="store_true")
+    parser.add_argument("--latent_partition_mode", type=str, default=None)
 
 
 def _add_optimizer_arguments(parser: argparse.ArgumentParser) -> None:
@@ -954,6 +957,7 @@ def _map_to_args_type(args: Dict[str, Any]) -> BaseArgs:
     result_args.resume_from_checkpoint = args.resume_from_checkpoint
     result_args.enable_slicing = args.enable_slicing
     result_args.enable_tiling = args.enable_tiling
+    result_args.latent_partition_mode = args.latent_partition_mode
 
     # Optimizer arguments
     result_args.optimizer = args.optimizer or "adamw"

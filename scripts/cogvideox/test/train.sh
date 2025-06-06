@@ -83,6 +83,7 @@ training_cmd=(
   # --resume_from_checkpoint 1000
   --enable_slicing
   --enable_tiling
+  --latent_partition_mode "c1b3t9"
 )
 
 # Optimizer arguments
