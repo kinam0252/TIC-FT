@@ -479,6 +479,9 @@ class SFTTrainer(Trainer):
                 if self.args.model_name == "cogvideox":
                     pred = pred[:, condition_count+buffer_count:]
                     target = target[:, condition_count+buffer_count:]
+                elif self.args.model_name == "wan":
+                    pred = pred[:, :, condition_count+buffer_count:]
+                    target = target[:, :, condition_count+buffer_count:]
                 else:
                     raise ValueError(f"Model name {self.args.model_name} not supported")
 

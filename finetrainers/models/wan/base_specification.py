@@ -22,7 +22,7 @@ from finetrainers.models.modeling_utils import ModelSpecification
 from finetrainers.processors import ProcessorMixin, T5Processor
 from finetrainers.typing import ArtifactType, SchedulerType
 from finetrainers.utils import get_non_null_items, safetensors_torch_save_function
-
+from finetrainers.buffer_config.util import parse_partition_string
 
 logger = get_logger()
 
@@ -360,7 +360,7 @@ class WanModelSpecification(ModelSpecification):
                 self.pretrained_model_name_or_path, **components, revision=self.revision, cache_dir=self.cache_dir
             )
         else:
-            pipe = WanImageToVideoPipeline.from_pretrained(
+            pipe = WanPipeline.from_pretrained(
                 self.pretrained_model_name_or_path, **components, revision=self.revision, cache_dir=self.cache_dir
             )
         pipe.text_encoder.to(self.text_encoder_dtype)
@@ -438,6 +438,7 @@ class WanModelSpecification(ModelSpecification):
         sigmas: torch.Tensor,
         generator: Optional[torch.Generator] = None,
         compute_posterior: bool = True,
+        latent_partition_mode: Optional[str] = None,
         **kwargs,
     ) -> Tuple[torch.Tensor, ...]:
         compute_posterior = False  # See explanation in prepare_latents
@@ -475,6 +476,27 @@ class WanModelSpecification(ModelSpecification):
 
         noise = torch.zeros_like(latents).normal_(generator=generator)
         noisy_latents = FF.flow_match_xt(latents, noise, sigmas)
+
+        latent_partition_config = parse_partition_string(latent_partition_mode)
+        condition_count = latent_partition_config["condition"]
+        buffer_count = latent_partition_config["buffer"]
+        target_count = latent_partition_config["target"]
+
+        noisy_latents[:, :, :condition_count] = latents[:, :, :condition_count]
+        if buffer_count == 3:
+            mask_075 = (sigmas > 0.75).view(-1, 1, 1, 1, 1)
+            mask_050 = (sigmas > 0.5).view(-1, 1, 1, 1, 1)
+            mask_025 = (sigmas > 0.25).view(-1, 1, 1, 1, 1)
+            
+            noisy_latents_075 = FF.flow_match_xt(latents[:, :, condition_count+2:condition_count+3], noise[:, :, condition_count+2:condition_count+3], 0.75)
+            noisy_latents_050 = FF.flow_match_xt(latents[:, :, condition_count+1:condition_count+2], noise[:, :, condition_count+1:condition_count+2], 0.5)
+            noisy_latents_025 = FF.flow_match_xt(latents[:, :, condition_count:condition_count+1], noise[:, :, condition_count:condition_count+1], 0.25)
+            
+            noisy_latents[:, :, condition_count+2:condition_count+3] = torch.where(mask_075, noisy_latents_075, noisy_latents[:, :, condition_count+2:condition_count+3])
+            noisy_latents[:, :, condition_count+1:condition_count+2] = torch.where(mask_050, noisy_latents_050, noisy_latents[:, :, condition_count+1:condition_count+2])
+            noisy_latents[:, :, condition_count:condition_count+1] = torch.where(mask_025, noisy_latents_025, noisy_latents[:, :, condition_count:condition_count+1])
+        else:
+            raise ValueError(f"Buffer count {buffer_count} not supported")
         timesteps = (sigmas.flatten() * 1000.0).long()
 
         if self.transformer_config.get("image_dim", None) is not None:
@@ -504,8 +526,13 @@ class WanModelSpecification(ModelSpecification):
         num_frames: Optional[int] = None,
         num_inference_steps: int = 50,
         generator: Optional[torch.Generator] = None,
+        latent_partition_mode: Optional[str] = None,
         **kwargs,
     ) -> List[ArtifactType]:
+
+        init_latents = process_video(pipeline, video, pipeline.dtype, generator, height, width, latent_partition_mode)
+        pipeline.custom_call = types.MethodType(custom_call, pipeline)
+
         generation_kwargs = {
             "prompt": prompt,
             "height": height,
@@ -515,6 +542,8 @@ class WanModelSpecification(ModelSpecification):
             "generator": generator,
             "return_dict": True,
             "output_type": "pil",
+            "latents": init_latents,
+            "latent_partition_mode": latent_partition_mode,
         }
         if self.transformer_config.get("image_dim", None) is not None:
             if image is None and video is None:
@@ -525,7 +554,7 @@ class WanModelSpecification(ModelSpecification):
             last_image = last_image if last_image is not None else image if video is None else video[-1]
             generation_kwargs["last_image"] = last_image
         generation_kwargs = get_non_null_items(generation_kwargs)
-        video = pipeline(**generation_kwargs).frames[0]
+        video = pipeline.custom_call(**generation_kwargs).frames[0]
         return [VideoArtifact(value=video)]
 
     def _save_lora_weights(
@@ -575,3 +604,271 @@ class WanModelSpecification(ModelSpecification):
         latents_std = latents_std.view(1, -1, 1, 1, 1).to(device=latents.device)
         latents = ((latents.float() - latents_mean) * latents_std).to(latents)
         return latents
+
+import types
+from typing import Any, Callable, Dict, List, Optional, Union
+from diffusers.pipelines.wan.pipeline_output import WanPipelineOutput
+from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
+from diffusers.utils import is_ftfy_available, is_torch_xla_available, logging, replace_example_docstring
+if is_torch_xla_available():
+    import torch_xla.core.xla_model as xm
+
+    XLA_AVAILABLE = True
+else:
+    XLA_AVAILABLE = False
+
+@torch.no_grad()
+def process_video(pipe, video, dtype, generator, height, width, latent_partition_mode):
+    if pipe.device != "cuda":
+        generator = None
+    if latent_partition_mode == None:
+        return None
+    from diffusers.utils import load_video
+    from diffusers.pipelines.wan.pipeline_wan_video2video import retrieve_latents
+    from diffusers.utils.torch_utils import randn_tensor
+    video = pipe.video_processor.preprocess_video(video, height=height, width=width)
+    video = video.to("cuda", dtype=pipe.dtype)
+    
+    video_latents = retrieve_latents(pipe.vae.encode(video))
+    latents_mean = (
+        torch.tensor(pipe.vae.config.latents_mean).view(1, pipe.vae.config.z_dim, 1, 1, 1).to(pipe.device, dtype)
+    )
+    latents_std = 1.0 / torch.tensor(pipe.vae.config.latents_std).view(1, pipe.vae.config.z_dim, 1, 1, 1).to(
+        pipe.device, dtype
+    )
+
+    init_latents = (video_latents - latents_mean) * latents_std
+
+    init_latents = init_latents.to(pipe.device)
+
+    noise = randn_tensor(init_latents.shape, generator=generator, device=pipe.device, dtype=dtype)
+    latent_partition_config = parse_partition_string(latent_partition_mode)
+    condition_count = latent_partition_config["condition"]
+    buffer_count = latent_partition_config["buffer"]
+    target_count = latent_partition_config["target"]
+
+    timesteps = pipe.scheduler.timesteps # torch.Size([1000]), torch.float32, 999~0
+    scheduler = pipe.scheduler
+    n_timesteps = timesteps.shape[0]
+    t_25 = timesteps[int(n_timesteps * (1 - 0.25))]
+    t_50 = timesteps[int(n_timesteps * (1 - 0.5))]
+    t_75 = timesteps[int(n_timesteps * (1 - 0.75))]
+    
+    init_latents[:, :, condition_count] = scheduler.add_noise(init_latents[:, :, condition_count], noise[:, :, condition_count], torch.tensor([t_25]))
+    init_latents[:, :, condition_count+1] = scheduler.add_noise(init_latents[:, :, condition_count+1], noise[:, :, condition_count+1], torch.tensor([t_50]))
+    init_latents[:, :, condition_count+2] = scheduler.add_noise(init_latents[:, :, condition_count+2], noise[:, :, condition_count+2], torch.tensor([t_75]))
+    init_latents[:, :, condition_count+3:] = noise[:, :, condition_count+3:]
+    init_latents = init_latents.to(pipe.device)
+    return init_latents
+
+@torch.no_grad()
+def retrieve_video(pipe, init_latents):
+    latents = init_latents.to(pipe.vae.dtype)
+    latents_mean = (
+        torch.tensor(pipe.vae.config.latents_mean)
+        .view(1, pipe.vae.config.z_dim, 1, 1, 1)
+        .to(latents.device, latents.dtype)
+    )
+    latents_std = 1.0 / torch.tensor(pipe.vae.config.latents_std).view(1, pipe.vae.config.z_dim, 1, 1, 1).to(
+        latents.device, latents.dtype
+    )
+    latents = latents / latents_std + latents_mean
+    video = pipe.vae.decode(latents, return_dict=False)[0]
+    video = pipe.video_processor.postprocess_video(video, output_type="pil")[0]
+    return video
+
+@torch.no_grad()
+def custom_call(
+    self,
+    prompt: Union[str, List[str]] = None,
+    negative_prompt: Union[str, List[str]] = None,
+    height: int = 480,
+    width: int = 832,
+    num_frames: int = 81,
+    num_inference_steps: int = 50,
+    guidance_scale: float = 5.0,
+    num_videos_per_prompt: Optional[int] = 1,
+    generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
+    latents: Optional[torch.Tensor] = None,
+    prompt_embeds: Optional[torch.Tensor] = None,
+    negative_prompt_embeds: Optional[torch.Tensor] = None,
+    output_type: Optional[str] = "np",
+    return_dict: bool = True,
+    attention_kwargs: Optional[Dict[str, Any]] = None,
+    callback_on_step_end: Optional[
+        Union[Callable[[int, int, Dict], None], PipelineCallback, MultiPipelineCallbacks]
+    ] = None,
+    callback_on_step_end_tensor_inputs: List[str] = ["latents"],
+    max_sequence_length: int = 512,
+    latent_partition_mode: Optional[str] = None,
+):
+
+    if isinstance(callback_on_step_end, (PipelineCallback, MultiPipelineCallbacks)):
+        callback_on_step_end_tensor_inputs = callback_on_step_end.tensor_inputs
+
+    # 1. Check inputs. Raise error if not correct
+    self.check_inputs(
+        prompt,
+        negative_prompt,
+        height,
+        width,
+        prompt_embeds,
+        negative_prompt_embeds,
+        callback_on_step_end_tensor_inputs,
+    )
+
+    if num_frames % self.vae_scale_factor_temporal != 1:
+        logger.warning(
+            f"`num_frames - 1` has to be divisible by {self.vae_scale_factor_temporal}. Rounding to the nearest number."
+        )
+        num_frames = num_frames // self.vae_scale_factor_temporal * self.vae_scale_factor_temporal + 1
+    num_frames = max(num_frames, 1)
+
+    self._guidance_scale = guidance_scale
+    self._attention_kwargs = attention_kwargs
+    self._current_timestep = None
+    self._interrupt = False
+
+    device = self._execution_device
+
+    # 2. Define call parameters
+    if prompt is not None and isinstance(prompt, str):
+        batch_size = 1
+    elif prompt is not None and isinstance(prompt, list):
+        batch_size = len(prompt)
+    else:
+        batch_size = prompt_embeds.shape[0]
+
+    # 3. Encode input prompt
+    prompt_embeds, negative_prompt_embeds = self.encode_prompt(
+        prompt=prompt,
+        negative_prompt=negative_prompt,
+        do_classifier_free_guidance=self.do_classifier_free_guidance,
+        num_videos_per_prompt=num_videos_per_prompt,
+        prompt_embeds=prompt_embeds,
+        negative_prompt_embeds=negative_prompt_embeds,
+        max_sequence_length=max_sequence_length,
+        device=device,
+    )
+
+    transformer_dtype = self.transformer.dtype
+    prompt_embeds = prompt_embeds.to(transformer_dtype)
+    if negative_prompt_embeds is not None:
+        negative_prompt_embeds = negative_prompt_embeds.to(transformer_dtype)
+
+    # 4. Prepare timesteps
+    self.scheduler.set_timesteps(num_inference_steps, device=device)
+    timesteps = self.scheduler.timesteps
+
+    # 5. Prepare latent variables
+    num_channels_latents = self.transformer.config.in_channels
+    latents = self.prepare_latents(
+        batch_size * num_videos_per_prompt,
+        num_channels_latents,
+        height,
+        width,
+        num_frames,
+        torch.float32,
+        device,
+        generator,
+        latents,
+    )
+
+    # 6. Denoising loop
+    num_warmup_steps = len(timesteps) - num_inference_steps * self.scheduler.order
+    self._num_timesteps = len(timesteps)
+
+    timesteps = self.scheduler.timesteps 
+    scheduler = self.scheduler
+    n_timesteps = timesteps.shape[0]
+    #t_100 = timesteps[0]
+    t_25 = timesteps[int(n_timesteps * (1 - 0.25))]
+    t_50 = timesteps[int(n_timesteps * (1 - 0.5))]
+    t_75 = timesteps[int(n_timesteps * (1 - 0.75))]
+    with self.progress_bar(total=num_inference_steps) as progress_bar:
+        for i, t in enumerate(timesteps):
+            if self.interrupt:
+                continue
+
+            self._current_timestep = t
+            latent_model_input = latents.to(transformer_dtype)
+            timestep = t.expand(latents.shape[0])
+
+            noise_pred = self.transformer(
+                hidden_states=latent_model_input,
+                timestep=timestep,
+                encoder_hidden_states=prompt_embeds,
+                attention_kwargs=attention_kwargs,
+                return_dict=False,
+            )[0]
+
+            if self.do_classifier_free_guidance:
+                noise_uncond = self.transformer(
+                    hidden_states=latent_model_input,
+                    timestep=timestep,
+                    encoder_hidden_states=negative_prompt_embeds,
+                    attention_kwargs=attention_kwargs,
+                    return_dict=False,
+                )[0]
+                noise_pred = noise_uncond + guidance_scale * (noise_pred - noise_uncond)
+
+            latent_partition_config = parse_partition_string(latent_partition_mode)
+            condition_count = latent_partition_config["condition"]
+            buffer_count = latent_partition_config["buffer"]
+            target_count = latent_partition_config["target"]
+            noise_pred[:, :, :condition_count] = 0
+            if buffer_count == 3:
+                if t > t_25:
+                    noise_pred[:, :, condition_count] = 0
+                if t > t_50:
+                    noise_pred[:, :, condition_count+1] = 0
+                if t > t_75:
+                    noise_pred[:, :, condition_count+2] = 0
+            else:
+                raise ValueError(f"Buffer count {buffer_count} not supported")
+
+            # compute the previous noisy sample x_t -> x_t-1
+            latents = self.scheduler.step(noise_pred, t, latents, return_dict=False)[0]
+
+            if callback_on_step_end is not None:
+                callback_kwargs = {}
+                for k in callback_on_step_end_tensor_inputs:
+                    callback_kwargs[k] = locals()[k]
+                callback_outputs = callback_on_step_end(self, i, t, callback_kwargs)
+
+                latents = callback_outputs.pop("latents", latents)
+                prompt_embeds = callback_outputs.pop("prompt_embeds", prompt_embeds)
+                negative_prompt_embeds = callback_outputs.pop("negative_prompt_embeds", negative_prompt_embeds)
+
+            # call the callback, if provided
+            if i == len(timesteps) - 1 or ((i + 1) > num_warmup_steps and (i + 1) % self.scheduler.order == 0):
+                progress_bar.update()
+
+            if XLA_AVAILABLE:
+                xm.mark_step()
+
+    self._current_timestep = None
+
+    if not output_type == "latent":
+        latents = latents.to(self.vae.dtype)
+        latents_mean = (
+            torch.tensor(self.vae.config.latents_mean)
+            .view(1, self.vae.config.z_dim, 1, 1, 1)
+            .to(latents.device, latents.dtype)
+        )
+        latents_std = 1.0 / torch.tensor(self.vae.config.latents_std).view(1, self.vae.config.z_dim, 1, 1, 1).to(
+            latents.device, latents.dtype
+        )
+        latents = latents / latents_std + latents_mean
+        video = self.vae.decode(latents, return_dict=False)[0]
+        video = self.video_processor.postprocess_video(video, output_type=output_type)
+    else:
+        video = latents
+
+    # Offload all models
+    self.maybe_free_model_hooks()
+
+    if not return_dict:
+        return (video,)
+
+    return WanPipelineOutput(frames=video)
