@@ -18,9 +18,9 @@ NUM_GPUS=1
 CUDA_VISIBLE_DEVICES="0"
 
 # Check the JSON files for the expected JSON format
-OUTPUT_DIR="outputs/cogvideox/test"
-TRAINING_DATASET_CONFIG="scripts/cogvideox/test/training.json"
-VALIDATION_DATASET_FILE="scripts/cogvideox/test/validation.json"
+OUTPUT_DIR="outputs/cogvideox/P2V"
+TRAINING_DATASET_CONFIG="scripts/cogvideox/P2V/training.json"
+VALIDATION_DATASET_FILE="scripts/cogvideox/P2V/validation.json"
 
 # Depending on how many GPUs you have available, choose your degree of parallelism and technique!
 DDP_1="--parallel_backend $BACKEND --pp_degree 1 --dp_degree 1 --dp_shards 1 --cp_degree 1 --tp_degree 1"
@@ -38,7 +38,7 @@ parallel_cmd=(
 # Model arguments
 model_cmd=(
   --model_name "cogvideox"
-  --pretrained_model_name_or_path "/home/nas4_user/kinamkim/2025_05_25/checkpoint/cogvideox-5b"
+  --pretrained_model_name_or_path "/data/kinamkim/checkpoint/CogVideoX-5b"
 )
 
 # Dataset arguments
@@ -72,7 +72,7 @@ training_cmd=(
   --training_type "lora"
   --seed 42
   --batch_size 1
-  --train_steps 3000
+  --train_steps 6000
   --rank 128
   --lora_alpha 128
   --target_modules "(transformer_blocks|single_transformer_blocks).*(to_q|to_k|to_v|to_out.0)"

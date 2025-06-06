@@ -369,16 +369,21 @@ class CogVideoXModelSpecification(ModelSpecification):
         pipeline: CogVideoXPipeline,
         prompt: str,
         image: Optional[Image] = None,
+        video = None,
         height: Optional[int] = None,
         width: Optional[int] = None,
         num_frames: Optional[int] = None,
         num_inference_steps: int = 50,
         generator: Optional[torch.Generator] = None,
+        latent_partition_mode: Optional[str] = None,
         **kwargs,
     ) -> List[ArtifactType]:
         # TODO(aryan): add support for more parameters
         if image is not None:
             pipeline = CogVideoXImageToVideoPipeline.from_pipe(pipeline)
+
+        init_latents = process_video(pipeline, video, pipeline.dtype, generator, height, width, latent_partition_mode)
+        pipeline.custom_call = types.MethodType(custom_call, pipeline)
 
         generation_kwargs = {
             "prompt": prompt,
@@ -390,9 +395,11 @@ class CogVideoXModelSpecification(ModelSpecification):
             "generator": generator,
             "return_dict": True,
             "output_type": "pil",
+            "latents": init_latents,
+            "latent_partition_mode": latent_partition_mode,
         }
         generation_kwargs = get_non_null_items(generation_kwargs)
-        video = pipeline(**generation_kwargs).frames[0]
+        video = pipeline.custom_call(**generation_kwargs).frames[0]
         return [VideoArtifact(value=video)]
 
     def _save_lora_weights(
