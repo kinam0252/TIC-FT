@@ -6,12 +6,22 @@
 ## 🌐Project Page
 - [TIC-FT Project Page](https://kinam0252.github.io/TIC-FT/)
 
-(Progress)
+## 🚧 Progress
+
+### ✅ Completed
+- [x] Implement I2V (Image-to-Video) code on both CogVideoX and Wan
+
+### 🔄 In Progress
+- [ ] Prepare model weights for various I2V applications
+- [ ] Implement V2V (Video-to-Video) code for CogVideoX
+
+### 🔜 Upcoming
+- [ ] Implement remaining features: Multiple Conditions, Action Transfer, and Video Interpolation
+
+
 
 ## 🎥Video Examples
 Below are example videos showcasing various application of TIC-FT.
-
-
 
 ## 🗺️Start Guide
 🧪**Diffusers-based codes**
