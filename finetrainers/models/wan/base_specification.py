@@ -627,7 +627,7 @@ def process_video(pipe, video, dtype, generator, height, width, latent_partition
     from diffusers.pipelines.wan.pipeline_wan_video2video import retrieve_latents
     from diffusers.utils.torch_utils import randn_tensor
     video = pipe.video_processor.preprocess_video(video, height=height, width=width)
-    video = video.to("cuda", dtype=pipe.dtype)
+    video = video.to("cuda", dtype=pipe.vae.dtype)
     
     video_latents = retrieve_latents(pipe.vae.encode(video))
     latents_mean = (
