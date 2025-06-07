@@ -25,37 +25,42 @@ Below are example videos showcasing various applications of TIC-FT.
 ---
 
 ### 🖼️ I2V
+https://github.com/user-attachments/assets/addbc3cb-1b9a-429b-a303-1b1d90f413d0
 
-<video src="assets/i2v-1.mp4" width="512" controls></video>
-<video src="assets/i2v-2.mp4" width="512" controls></video>
-<video src="assets/i2v-3.mp4" width="512" controls></video>
-<video src="assets/i2v-4.mp4" width="512" controls></video>
+https://github.com/user-attachments/assets/35031954-bdbb-4fae-a816-7ac4d211fb5e
+
+https://github.com/user-attachments/assets/cb646533-da91-475d-bbc3-c18927b0fb12
+
+https://github.com/user-attachments/assets/17197e22-935a-4b15-86c5-913d9e0ff5bb
 
 ---
 
 ### 🔁 V2V
+https://github.com/user-attachments/assets/a65ac52f-d0b9-4122-8de6-686225e7b618
 
-<video src="assets/v2v-1.mp4" width="512" controls></video>
-<video src="assets/v2v-2.mp4" width="512" controls></video>
+https://github.com/user-attachments/assets/95329b8f-fcff-4a64-ac52-13091249c269
 
 ---
 
 ### 🖼️ Multiple Conditions
+https://github.com/user-attachments/assets/621e6bdc-8d0c-457a-9d33-7f81a707946f
 
-<video src="assets/MC-1.mp4" width="512" controls></video>
-<video src="assets/MC-2.mp4" width="512" controls></video>
+https://github.com/user-attachments/assets/29cb5bfe-a6d2-41b0-a9c8-3c1a5e5301a8
 
 ---
 
 ### 🎯 Action Transfer
 
-<video src="assets/ActionTransfer-1.mp4" width="512" controls></video>
+https://github.com/user-attachments/assets/9cba035f-45ae-4f78-8dfc-b933e94a22af
 
 ---
 
 ### 🕰️ Keyframe Interpolation
 
-<video src="assets/Interpolation-1.mp4" width="512" controls></video>
+
+https://github.com/user-attachments/assets/feed64a0-eb5d-416f-9721-489504d1cd0b
+
+
 
 
 ## 🗺️Start Guide
