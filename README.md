@@ -9,19 +9,54 @@
 ## 🚧 Progress
 
 ### ✅ Completed
-- [x] Implement I2V (Image-to-Video) code on both CogVideoX and Wan
+- [x] Implement I2V code on both CogVideoX and Wan
 
 ### 🔄 In Progress
 - [ ] Prepare model weights for various I2V applications
-- [ ] Implement V2V (Video-to-Video) code for CogVideoX
+- [ ] Implement V2V code for CogVideoX
 
 ### 🔜 Upcoming
 - [ ] Implement remaining features: Multiple Conditions, Action Transfer, and Video Interpolation
 
+## 🎥 Video Examples
 
+Below are example videos showcasing various applications of TIC-FT.
 
-## 🎥Video Examples
-Below are example videos showcasing various application of TIC-FT.
+---
+
+### 🖼️ I2V
+
+<video src="assets/i2v-1.mp4" width="512" controls></video>
+<video src="assets/i2v-2.mp4" width="512" controls></video>
+<video src="assets/i2v-3.mp4" width="512" controls></video>
+<video src="assets/i2v-4.mp4" width="512" controls></video>
+
+---
+
+### 🔁 V2V
+
+<video src="assets/v2v-1.mp4" width="512" controls></video>
+<video src="assets/v2v-2.mp4" width="512" controls></video>
+
+---
+
+### 🖼️ Multiple Conditions
+
+<video src="assets/MC-1.mp4" width="512" controls></video>
+<video src="assets/MC-2.mp4" width="512" controls></video>
+
+---
+
+### 🎯 Action Transfer
+
+<video src="assets/ActionTransfer-1.mp4" width="512" controls></video>
+
+---
+
+### 🕰️ Keyframe Interpolation
+
+<video src="assets/Interpolation-1.mp4" width="512" controls></video>
+
 
 ## 🗺️Start Guide
 🧪**Diffusers-based codes**
