@@ -63,6 +63,12 @@ def parse_args():
         default=30,
         help="Number of videos to generate"
     )
+    parser.add_argument(
+        "--repeat",
+        type=int,
+        default=30,
+        help="Number of times to repeat each sample with increasing seed (default: 30)"
+    )
     return parser.parse_args()
 
 
@@ -143,31 +149,40 @@ if __name__ == "__main__":
             print(f"video_path: {video_path}")
             from diffusers.utils import load_video
             video = load_video(video_path)
-            init_latents = process_video(pipe, 
-                                         video, 
-                                         torch.bfloat16, 
-                                         generator, 
-                                         args.height, 
-                                         args.width,
-                                         args.latent_partition_mode)
-            
-            if args.latent_partition_mode == None:
-                init_latents = None
-            # pipe.enable_model_cpu_offload()
 
-            import types
-            pipe.custom_call = types.MethodType(custom_call, pipe)
-            video = pipe.custom_call(prompt, 
-                         negative_prompt=neg_prompt,
-                         generator=generator, 
-                         width=args.width, 
-                         height=args.height, 
-                         num_frames=49,
-                         latents=init_latents,
-                         latent_partition_mode=args.latent_partition_mode).frames[0]
+            # Determine repeat count and seed list
             if args.model_name == "wan" and i == 0:
-                output_name = "dummy_output.mp4"
+                repeat_count = 1
             else:
-                output_name = f"output_{i}.mp4"
-            export_to_video(video, os.path.join(savedir, output_name))
-            print(f"saved at {os.path.join(savedir, output_name)}")
+                repeat_count = args.repeat
+
+            for rep in range(repeat_count):
+                seed = args.seed + rep * 10
+                generator = torch.Generator(device=pipe.device).manual_seed(seed)
+                init_latents = process_video(pipe, 
+                                             video, 
+                                             torch.bfloat16, 
+                                             generator, 
+                                             args.height, 
+                                             args.width,
+                                             args.latent_partition_mode)
+                if args.latent_partition_mode == None:
+                    init_latents = None
+                # pipe.enable_model_cpu_offload()
+
+                import types
+                pipe.custom_call = types.MethodType(custom_call, pipe)
+                video = pipe.custom_call(prompt, 
+                             negative_prompt=neg_prompt,
+                             generator=generator, 
+                             width=args.width, 
+                             height=args.height, 
+                             num_frames=49,
+                             latents=init_latents,
+                             latent_partition_mode=args.latent_partition_mode).frames[0]
+                if args.model_name == "wan" and i == 0:
+                    output_name = f"dummy_output_seed_{seed}.mp4"
+                else:
+                    output_name = f"output_{i}_seed_{seed}.mp4"
+                export_to_video(video, os.path.join(savedir, output_name))
+                print(f"saved at {os.path.join(savedir, output_name)}")
