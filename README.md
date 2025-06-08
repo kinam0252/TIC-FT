@@ -21,7 +21,7 @@
 ## 🗺️Start Guide
 ## 📂 Dataset
 
-- Download dataset zip file here: [Drive](tmp link)
+- Download dataset zip file here: [Drive](https://drive.google.com/drive/folders/1asL4g2mutM4AtR6ygXEgabfPszSRQ2iW?usp=drive_link)
 - Unzip the dataset under `dataset/`, and make sure the structure matches `dataset/example/`.
 
 - For custom datasets, follow the structure of `dataset/example/`.
