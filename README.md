@@ -18,6 +18,36 @@
 ### 🔜 Upcoming
 - [ ] Implement remaining features: Multiple Conditions, Action Transfer, and Video Interpolation
 
+## 🗺️Start Guide
+## 📂 Dataset
+
+- Download dataset zip file here: [Drive](tmp link)
+- Unzip the dataset under `dataset/`, and make sure the structure matches `dataset/example/`.
+
+- For custom datasets, follow the structure of `dataset/example/`.
+
+## 🚀 Train
+
+- For **CogVideoX**:  
+  Example:
+  ```bash
+  scripts/cogvideox/I2V/train.sh
+
+- For **Wan**:
+  Example:
+  ```bash
+  scripts/wan/I2V/train.sh
+
+## 🔎 Inference
+```bash
+python validate.py \
+  --model_name wan \
+  --model_id {checkpoint path} \
+  --lora_weight_path {safetensors path} \
+  --latent_partition_mode c1b3t9 \
+  --dataset_dir {dataset dir}
+```
+
 ## 🎥 Video Examples
 
 Below are example videos showcasing various applications of TIC-FT.
@@ -59,32 +89,6 @@ https://github.com/user-attachments/assets/9cba035f-45ae-4f78-8dfc-b933e94a22af
 
 
 https://github.com/user-attachments/assets/feed64a0-eb5d-416f-9721-489504d1cd0b
-
-
-
-
-## 🗺️Start Guide
-## 📂 Dataset
-
-- Download dataset zip file here: [Drive](tmp link)
-- Unzip the dataset under `dataset/`, and make sure the structure matches `dataset/test/`.
-
-- For custom datasets, follow the structure of `dataset/test/`.
-
-## 🚀 Train
-
-- For **CogVideoX**:  
-  Example:
-  ```bash
-  scripts/cogvideox/I2V/train.sh
-
-- For **Wan**:
-  Example:
-  ```bash
-  scripts/wan/I2V/train.sh
-
-## 🔎 Inference
-python validate.py --model_name wan --model_id {checkpoint path} --lora_weight_path {safetensors path} --latent_partition_mode c1b3t9 --dataset_dir {dataset dir}
 
 ## 🙏Acknowledgements
 This project is built upon the following works:
