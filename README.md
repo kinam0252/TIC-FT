@@ -80,6 +80,25 @@ https://github.com/user-attachments/assets/1fdee654-49e0-4481-b3cd-266fd7105f7b
 ### 🔗 Weights
 - Download pretrained weights from here: [Drive](https://drive.google.com/drive/folders/1asL4g2mutM4AtR6ygXEgabfPszSRQ2iW?usp=drive_link)
 
+## 📂 Dataset
+
+To prepare your dataset, follow the structure provided in `dataset/example/`.  
+
+- Each video should have **49 frames** in total:
+  - **13 condition image frames**
+  - **36 target video frames**
+
+When converted into latent representations, the 13 frames are split into:
+- The first **4 frames** → condition frames
+- The next **9 frames** → target frames
+
+During training:
+- Only the first condition frame is kept as a pure condition.
+- The remaining 3 condition frames are progressively noised and used as buffer frames.
+
+In the training scripts, you will find that `latent_partition_mode` is set to `c1b3t9`, which means:
+- `c1b3t9` → 1 pure condition frame, 3 buffer frames, and 9 target frames.
+
 ## 🚀 Train
 
 - For **CogVideoX**:  
