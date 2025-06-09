@@ -24,11 +24,11 @@ Follow these steps to easily test the I2V pipeline:
      - Or replace `1.png` directly.
 
 4. **Convert Image to Reference Video**  
-   Use the following script to duplicate the image into 49 frames and generate a reference video:
+   Use the following script to duplicate the image into 49 frames and generate a condition video:
    ```bash
    python dataset/utils/make_video_by_copying_image.py {image_path}
    ```
-   Save the generated reference video into: dataset/custom/{mode}/videos
+   Save the generated condition video into: dataset/custom/{mode}/videos
 5. **Prepare Dataset Files**
    - In dataset/custom/{mode}/videos.txt, list the relative video paths (one per line).
    - In dataset/custom/{mode}/prompt.txt, write the corresponding text prompts (one per line).
