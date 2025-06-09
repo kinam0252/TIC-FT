@@ -6,14 +6,15 @@
 ## 🌐Project Page
 - [TIC-FT Project Page](https://kinam0252.github.io/TIC-FT/)
 
-## 🧪 I2V Practice Guide
+# 🚀 Try It Yourself!
 
-Try this step-by-step to better understand the I2V pipeline:
+Follow these steps to easily test the I2V pipeline:
 
 1. **Prepare Your Image**  
-   Generate your face image using an image generation tool such as ChatGPT, converting it into either **Cartoon** or **3D Animation** style.
+   Convert your face image into either **Cartoon** or **3D Animation** style using an image generation tool such as ChatGPT.
+   <img src="https://github.com/user-attachments/assets/2282e710-f6fa-4bab-af38-547b476dc26b" width="480">
 
-2. **Save the Image**  
+3. **Save the Image**  
    Save your generated image to:  
    `dataset/custom/{mode}/images`  
    - `{mode}` should be either `Cartoon` or `3DAnimation`.
@@ -21,21 +22,21 @@ Try this step-by-step to better understand the I2V pipeline:
      - Add new images as `2.png`, `3.png`, etc.
      - Or replace `1.png` directly.
 
-3. **Convert Image to Video**  
+4. **Convert Image to Video**  
    Use the following script to duplicate the image into 49 frames and generate a video:
    ```bash
    python dataset/utils/make_video_by_copying_image.py {image_path}
    ```
    Save the generated video into: dataset/custom/{mode}/videos
-4. **Prepare Dataset Files**
+5. **Prepare Dataset Files**
    - In dataset/custom/{mode}/videos.txt, list the relative video paths (one per line).
    - In dataset/custom/{mode}/prompt.txt, write the corresponding text prompts (one per line).
 
-5. **Download Pretrained Weights**  
+6. **Download Pretrained Weights**  
    Download the safetensors weights for your selected mode from:  
    [Google Drive](https://drive.google.com/drive/folders/1TXME89uReXw4VFFW5BmYrKHdfyfpAQAv?usp=drive_link)
 
-6. **Run Inference**  
+7. **Run Inference**  
    Example command:
    ```bash
    python validate_repeat.py \
@@ -44,6 +45,17 @@ Try this step-by-step to better understand the I2V pipeline:
    --lora_weight_path /data/kinamkim/TIC-FT/outputs/wan/3DAnimation/pytorch_lora_weights.safetensors \
    --latent_partition_mode c1b3t9 \
    --dataset_dir /data/kinamkim/dummy/TIC-FT/dataset/custom/3DAnimation
+
+8. Now you have your own video featuring your character!
+   
+
+https://github.com/user-attachments/assets/ca34819f-52be-4b05-9cf0-747c902bb36a
+
+
+
+https://github.com/user-attachments/assets/1fdee654-49e0-4481-b3cd-266fd7105f7b
+
+
 
 ## 🚧 Progress
 
