@@ -45,9 +45,15 @@ Follow these steps to easily test the I2V pipeline:
    --model_id Wan2.1-T2V-14B-Diffusers \
    --lora_weight_path /data/kinamkim/TIC-FT/outputs/wan/3DAnimation/pytorch_lora_weights.safetensors \
    --latent_partition_mode c1b3t9 \
-   --dataset_dir /data/kinamkim/dummy/TIC-FT/dataset/custom/3DAnimation
+   --dataset_dir /data/kinamkim/TIC-FT/dataset/custom/3DAnimation
+   ```
+   This command will generate multiple videos with different random seeds and save them under `validation_videos/` in your weight directory.
 
-8. Now you have your own video featuring your character!
+8. **⚠ Note (Wan Model Specific)**  
+   - Due to a known issue, the first generated sample may appear noisy.
+   - Valid results typically start from the second sample.
+
+9. Now you have your own video featuring your character!
    
 
 https://github.com/user-attachments/assets/ca34819f-52be-4b05-9cf0-747c902bb36a
