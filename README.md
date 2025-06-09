@@ -11,7 +11,7 @@
 Follow these steps to easily test the I2V pipeline:
 
 1. **Prepare Your Image**  
-   Convert your face image into either **Cartoon** or **3D Animation** style using an image generation tool such as ChatGPT.
+   Convert your face image into either **Cartoon** or **3D Animation** style with a white background using an image generation tool such as ChatGPT.
 
    <img src="https://github.com/user-attachments/assets/2282e710-f6fa-4bab-af38-547b476dc26b" width="480">
 
