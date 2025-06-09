@@ -45,7 +45,7 @@ Follow these steps to easily test the I2V pipeline:
    --model_id Wan2.1-T2V-14B-Diffusers \
    --lora_weight_path /data/kinamkim/TIC-FT/outputs/wan/3DAnimation/pytorch_lora_weights.safetensors \
    --latent_partition_mode c1b3t9 \
-   --dataset_dir /data/kinamkim/TIC-FT/dataset/custom/3DAnimation
+   --dataset_dir /data/kinamkim/TIC-FT/dataset/custom/Cartoon
    ```
    This command will generate multiple videos with different random seeds and save them under `validation_videos/` in your weight directory.
 
