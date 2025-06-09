@@ -42,7 +42,7 @@ Follow these steps to easily test the I2V pipeline:
    ```bash
    python validate_repeat.py \
    --model_name wan \
-   --model_id Wan2.1-T2V-14B-Diffusers \
+   --model_id Wan-AI/Wan2.1-T2V-14B-Diffusers \
    --lora_weight_path /data/kinamkim/TIC-FT/outputs/wan/3DAnimation/pytorch_lora_weights.safetensors \
    --latent_partition_mode c1b3t9 \
    --dataset_dir /data/kinamkim/TIC-FT/dataset/custom/Cartoon
