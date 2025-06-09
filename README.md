@@ -18,7 +18,7 @@ Follow these steps to easily test the I2V pipeline:
 3. **Save the Image**  
    Save your generated image to:  
    `dataset/custom/{mode}/images`  
-   - `{mode}` should be either `Cartoon` or `3DAnimation`.
+   - `{mode}` could be either `Cartoon` or `3DAnimation`.
    - By default, an example `1.png` is provided. You can:
      - Add new images as `2.png`, `3.png`, etc.
      - Or replace `1.png` directly.
