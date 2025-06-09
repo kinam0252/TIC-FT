@@ -177,6 +177,5 @@ validation_dataset/
 wan-framepack/
 
 !requirements.txt
-dataset/
 finetrainers-precomputed-data/
 logs/
