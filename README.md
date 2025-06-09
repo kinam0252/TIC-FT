@@ -6,6 +6,27 @@
 ## 🌐Project Page
 - [TIC-FT Project Page](https://kinam0252.github.io/TIC-FT/)
 
+## ⚙️ Requirements
+
+We recommend using `conda` to manage the environment:
+
+```bash
+# Create a new conda environment
+conda create -n tic-ft python=3.10
+
+# Activate the environment
+conda activate tic-ft
+
+# Install python dependencies
+pip install -r requirements.txt
+
+# Install ffmpeg via conda-forge
+conda install -c conda-forge ffmpeg
+
+# Additional packages for video processing
+pip install imageio imageio-ffmpeg
+```
+
 # 🚀 Try It Yourself!
 
 Follow these steps to easily test the I2V pipeline:
