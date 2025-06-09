@@ -6,6 +6,64 @@
 ## 🌐Project Page
 - [TIC-FT Project Page](https://kinam0252.github.io/TIC-FT/)
 
+# 🚀 Try It Yourself!
+
+Follow these steps to easily test the I2V pipeline:
+
+1. **Prepare Your Image**  
+   Convert your face image into either **Cartoon** or **3D Animation** style with a white background using an image generation tool such as ChatGPT.
+
+   <img src="https://github.com/user-attachments/assets/2282e710-f6fa-4bab-af38-547b476dc26b" width="480">
+
+3. **Save the Image**  
+   Save your generated image to:  
+   `dataset/custom/{mode}/images`  
+   - `{mode}` could be either `Cartoon` or `3DAnimation`.
+   - By default, an example `1.png` is provided. You can:
+     - Add new images as `2.png`, `3.png`, etc.
+     - Or replace `1.png` directly.
+
+4. **Convert Image to Reference Video**  
+   Use the following script to duplicate the image into 49 frames and generate a condition video:
+   ```bash
+   python dataset/utils/make_video_by_copying_image.py {image_path}
+   ```
+   Save the generated condition video into: dataset/custom/{mode}/videos
+5. **Prepare Dataset Files**
+   - In dataset/custom/{mode}/videos.txt, list the relative video paths (one per line).
+   - In dataset/custom/{mode}/prompt.txt, write the corresponding text prompts (one per line).
+
+6. **Download Pretrained Weights**  
+   Download the safetensors weights for your selected mode from:  
+   [Google Drive](https://drive.google.com/drive/folders/1TXME89uReXw4VFFW5BmYrKHdfyfpAQAv?usp=drive_link)
+
+7. **Run Inference**  
+   Example command:
+   ```bash
+   python validate_repeat.py \
+   --model_name wan \
+   --model_id Wan-AI/Wan2.1-T2V-14B-Diffusers \
+   --lora_weight_path /data/kinamkim/TIC-FT/outputs/wan/3DAnimation/pytorch_lora_weights.safetensors \
+   --latent_partition_mode c1b3t9 \
+   --dataset_dir /data/kinamkim/TIC-FT/dataset/custom/Cartoon
+   ```
+   This command will generate multiple videos with different random seeds and save them under `validation_videos/` in your weight directory.
+
+8. **⚠ Note (Wan Model Specific)**  
+   - Due to a known issue, the first generated sample may appear noisy.
+   - Valid results typically start from the second sample.
+
+9. Now you have your own video featuring your character!
+   
+
+https://github.com/user-attachments/assets/ca34819f-52be-4b05-9cf0-747c902bb36a
+
+
+
+https://github.com/user-attachments/assets/1fdee654-49e0-4481-b3cd-266fd7105f7b
+
+
+
 ## 🚧 Progress
 
 ### ✅ Completed
@@ -21,6 +79,25 @@
 ## 🗺️Start Guide
 ### 🔗 Weights
 - Download pretrained weights from here: [Drive](https://drive.google.com/drive/folders/1asL4g2mutM4AtR6ygXEgabfPszSRQ2iW?usp=drive_link)
+
+## 📂 Dataset
+
+To prepare your dataset, follow the structure provided in `dataset/example/`.  
+
+- Each video should have **49 frames** in total:
+  - **13 condition image frames**
+  - **36 target video frames**
+
+When converted into latent representations, the 13 frames are split into:
+- The first **4 frames** → condition frames
+- The next **9 frames** → target frames
+
+During training:
+- Only the first condition frame is kept as a pure condition.
+- The remaining 3 condition frames are progressively noised and used as buffer frames.
+
+In the training scripts, you will find that `latent_partition_mode` is set to `c1b3t9`, which means:
+- `c1b3t9` → 1 pure condition frame, 3 buffer frames, and 9 target frames.
 
 ## 🚀 Train
 
