@@ -20,6 +20,9 @@ conda activate tic-ft
 # Install python dependencies
 pip install -r requirements.txt
 
+# Install ftfy package
+pip install ftfy
+
 # Install ffmpeg via conda-forge
 conda install -c conda-forge ffmpeg
 
