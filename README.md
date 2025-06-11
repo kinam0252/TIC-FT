@@ -152,6 +152,8 @@ Below are example videos showcasing various applications of TIC-FT.
 ---
 
 ### 🖼️ I2V
+We emphasize that **our I2V approach is not limited to the first frame**; instead, it leverages the identity of the first frame to enable the generation of diverse and coherent videos.
+
 https://github.com/user-attachments/assets/addbc3cb-1b9a-429b-a303-1b1d90f413d0
 
 https://github.com/user-attachments/assets/35031954-bdbb-4fae-a816-7ac4d211fb5e
