@@ -483,20 +483,19 @@ class WanModelSpecification(ModelSpecification):
         target_count = latent_partition_config["target"]
 
         noisy_latents[:, :, :condition_count] = latents[:, :, :condition_count]
-        if buffer_count == 3:
-            mask_075 = (sigmas > 0.75).view(-1, 1, 1, 1, 1)
-            mask_050 = (sigmas > 0.5).view(-1, 1, 1, 1, 1)
-            mask_025 = (sigmas > 0.25).view(-1, 1, 1, 1, 1)
-            
-            noisy_latents_075 = FF.flow_match_xt(latents[:, :, condition_count+2:condition_count+3], noise[:, :, condition_count+2:condition_count+3], 0.75)
-            noisy_latents_050 = FF.flow_match_xt(latents[:, :, condition_count+1:condition_count+2], noise[:, :, condition_count+1:condition_count+2], 0.5)
-            noisy_latents_025 = FF.flow_match_xt(latents[:, :, condition_count:condition_count+1], noise[:, :, condition_count:condition_count+1], 0.25)
-            
-            noisy_latents[:, :, condition_count+2:condition_count+3] = torch.where(mask_075, noisy_latents_075, noisy_latents[:, :, condition_count+2:condition_count+3])
-            noisy_latents[:, :, condition_count+1:condition_count+2] = torch.where(mask_050, noisy_latents_050, noisy_latents[:, :, condition_count+1:condition_count+2])
-            noisy_latents[:, :, condition_count:condition_count+1] = torch.where(mask_025, noisy_latents_025, noisy_latents[:, :, condition_count:condition_count+1])
+        if buffer_count > 0:
+            thresholds = [i / (buffer_count + 1) for i in range(1, buffer_count + 1)]
+            for i, threshold in enumerate(reversed(thresholds)):
+                buffer_idx = condition_count + i
+                mask = (sigmas > threshold).view(-1, 1, 1, 1, 1)
+                noisy_latent = FF.flow_match_xt(
+                    latents[:, :, buffer_idx:buffer_idx+1],
+                    noise[:, :, buffer_idx:buffer_idx+1],
+                    threshold
+                )
+                noisy_latents[:, :, buffer_idx:buffer_idx+1] = torch.where(mask, noisy_latent, noisy_latents[:, :, buffer_idx:buffer_idx+1])
         else:
-            raise ValueError(f"Buffer count {buffer_count} not supported")
+            raise ValueError(f"Buffer count must be greater than 0")
         timesteps = (sigmas.flatten() * 1000.0).long()
 
         if self.transformer_config.get("image_dim", None) is not None:
@@ -650,14 +649,27 @@ def process_video(pipe, video, dtype, generator, height, width, latent_partition
     timesteps = pipe.scheduler.timesteps # torch.Size([1000]), torch.float32, 999~0
     scheduler = pipe.scheduler
     n_timesteps = timesteps.shape[0]
-    t_25 = timesteps[int(n_timesteps * (1 - 0.25))]
-    t_50 = timesteps[int(n_timesteps * (1 - 0.5))]
-    t_75 = timesteps[int(n_timesteps * (1 - 0.75))]
+    # Dynamically calculate t_x values for buffer frames
+    t_values = []
+    if buffer_count > 0:
+        for i in range(1, buffer_count + 1):
+            ratio = 1 - (i / (buffer_count + 1))
+            t_idx = int(n_timesteps * ratio)
+            t_values.append(timesteps[t_idx])
+    else:
+        raise ValueError(f"Buffer count must be greater than 0")
     
-    init_latents[:, :, condition_count] = scheduler.add_noise(init_latents[:, :, condition_count], noise[:, :, condition_count], torch.tensor([t_25]))
-    init_latents[:, :, condition_count+1] = scheduler.add_noise(init_latents[:, :, condition_count+1], noise[:, :, condition_count+1], torch.tensor([t_50]))
-    init_latents[:, :, condition_count+2] = scheduler.add_noise(init_latents[:, :, condition_count+2], noise[:, :, condition_count+2], torch.tensor([t_75]))
-    init_latents[:, :, condition_count+3:] = noise[:, :, condition_count+3:]
+    # Apply noise to each buffer frame
+    for i, t_val in enumerate(t_values):
+        buffer_idx = condition_count + i
+        init_latents[:, :, buffer_idx] = scheduler.add_noise(
+            init_latents[:, :, buffer_idx], 
+            noise[:, :, buffer_idx], 
+            t_val
+        )
+    
+    # Apply full noise to target frames
+    init_latents[:, :, condition_count + buffer_count:] = noise[:, :, condition_count + buffer_count:]
     init_latents = init_latents.to(pipe.device)
     return init_latents
 
@@ -781,10 +793,19 @@ def custom_call(
     timesteps = self.scheduler.timesteps 
     scheduler = self.scheduler
     n_timesteps = timesteps.shape[0]
-    #t_100 = timesteps[0]
-    t_25 = timesteps[int(n_timesteps * (1 - 0.25))]
-    t_50 = timesteps[int(n_timesteps * (1 - 0.5))]
-    t_75 = timesteps[int(n_timesteps * (1 - 0.75))]
+    # Dynamically calculate t_x values for buffer frames
+    latent_partition_config = parse_partition_string(latent_partition_mode)
+    condition_count = latent_partition_config["condition"]
+    buffer_count = latent_partition_config["buffer"]
+    target_count = latent_partition_config["target"]
+    t_values = []
+    if buffer_count > 0:
+        for i in range(1, buffer_count + 1):
+            ratio = 1 - (i / (buffer_count + 1))
+            t_idx = int(n_timesteps * ratio)
+            t_values.append(timesteps[t_idx])
+    else:
+        raise ValueError(f"Buffer count must be greater than 0")
     with self.progress_bar(total=num_inference_steps) as progress_bar:
         for i, t in enumerate(timesteps):
             if self.interrupt:
@@ -812,20 +833,12 @@ def custom_call(
                 )[0]
                 noise_pred = noise_uncond + guidance_scale * (noise_pred - noise_uncond)
 
-            latent_partition_config = parse_partition_string(latent_partition_mode)
-            condition_count = latent_partition_config["condition"]
-            buffer_count = latent_partition_config["buffer"]
-            target_count = latent_partition_config["target"]
+            # Mask condition and buffer frames dynamically
             noise_pred[:, :, :condition_count] = 0
-            if buffer_count == 3:
-                if t > t_25:
-                    noise_pred[:, :, condition_count] = 0
-                if t > t_50:
-                    noise_pred[:, :, condition_count+1] = 0
-                if t > t_75:
-                    noise_pred[:, :, condition_count+2] = 0
-            else:
-                raise ValueError(f"Buffer count {buffer_count} not supported")
+            for i, t_val in enumerate(t_values):
+                buffer_idx = condition_count + i
+                if t > t_val:
+                    noise_pred[:, :, buffer_idx] = 0
 
             # compute the previous noisy sample x_t -> x_t-1
             latents = self.scheduler.step(noise_pred, t, latents, return_dict=False)[0]

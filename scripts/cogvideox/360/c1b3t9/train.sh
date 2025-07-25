@@ -2,6 +2,10 @@
 
 set -e -x
 
+# === Dataset and Mode Variables ===
+DATASET_NAME="360"
+MODE="c1b3t9"
+
 # export TORCH_LOGS="+dynamo,recompiles,graph_breaks"
 # export TORCHDYNAMO_VERBOSE=1
 export WANDB_MODE="offline"
@@ -15,12 +19,11 @@ BACKEND="ptd"
 
 # In this setting, I'm using 2 GPUs on a 4-GPU node for training
 NUM_GPUS=1
-CUDA_VISIBLE_DEVICES="0"
 
 # Check the JSON files for the expected JSON format
-OUTPUT_DIR="outputs/cogvideox/P2V"
-TRAINING_DATASET_CONFIG="scripts/cogvideox/P2V/training.json"
-VALIDATION_DATASET_FILE="scripts/cogvideox/P2V/validation.json"
+OUTPUT_DIR="outputs/cogvideox/${DATASET_NAME}/${MODE}"
+TRAINING_DATASET_CONFIG="scripts/cogvideox/${DATASET_NAME}/${MODE}/training.json"
+VALIDATION_DATASET_FILE="scripts/cogvideox/${DATASET_NAME}/${MODE}/validation.json"
 
 # Depending on how many GPUs you have available, choose your degree of parallelism and technique!
 DDP_1="--parallel_backend $BACKEND --pp_degree 1 --dp_degree 1 --dp_shards 1 --cp_degree 1 --tp_degree 1"
@@ -38,7 +41,7 @@ parallel_cmd=(
 # Model arguments
 model_cmd=(
   --model_name "cogvideox"
-  --pretrained_model_name_or_path "/data/kinamkim/checkpoint/CogVideoX-5b"
+  --pretrained_model_name_or_path "/home/nas4_user/kinamkim/2025_05_25/checkpoint/cogvideox-5b"
 )
 
 # Dataset arguments
@@ -79,11 +82,11 @@ training_cmd=(
   --gradient_accumulation_steps 1
   --gradient_checkpointing
   --checkpointing_steps 1000
-  --checkpointing_limit 2
+  --checkpointing_limit 6
   # --resume_from_checkpoint 1000
   --enable_slicing
   --enable_tiling
-  --latent_partition_mode "c1b3t9"
+  --latent_partition_mode "$MODE"
 )
 
 # Optimizer arguments

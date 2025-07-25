@@ -1,0 +1,14 @@
+{
+    "datasets": [
+      {
+        "data_root": "dataset/360/c3b3t9",
+        "dataset_type": "video",
+        "id_token": "360",
+        "video_resolution_buckets": [
+          [57, 480, 480]
+        ],
+        "reshape_mode": "bicubic",
+        "remove_common_llm_caption_prefixes": true
+      }
+    ]
+  }
