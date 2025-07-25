@@ -1,0 +1,24 @@
+{
+  "data": [
+    {
+      "caption": "360 This animated clip demonstrates the transformation of a top-down view of an object into a dynamic and realistic 360-degree rotating video from a side perspective; [CONDITION] the condition image showcases a metallic helmet viewed directly from above, featuring a rounded dark gray dome reinforced with gold-colored crossbars. The crossbars are detailed with regularly spaced rivets, creating a symmetrical, structured appearance. The helmet is placed on a simple dark circular base, against a muted greenish background. [VIDEO] the video animates the helmet standing upright on the same round pedestal, captured from the side, slowly rotating 360 degrees. As the helmet turns, its curved dark surface and the gold crossbars with riveted accents are fully revealed. The structure appears solid and symmetrical, with the gold detailing consistently highlighted by soft lighting. The background remains plain and unobtrusive, keeping the focus on the helmet’s metallic textures and design.",
+      "image_path": null,
+      "video_path": "dataset/360/c6b9t9/videos/1.mp4",
+      "num_inference_steps": 50,
+      "height": 480,
+      "width": 480,
+      "num_frames": 93,
+      "export_fps": 10
+    },
+    {
+      "caption": "360 This animated clip demonstrates the transformation of a top-down view of an object into a dynamic and realistic 360-degree rotating video from a side perspective; [CONDITION] the condition image showcases a simple cardboard box viewed directly from above, showing a clean square shape with a visible center crease along the top surface. The box is placed on a dark gray round pedestal, set against a teal background. [VIDEO] the video animates the box standing upright on the same round pedestal, captured from the side, slowly rotating 360 degrees. As the box turns, the flat surfaces, crisp edges, and matte cardboard texture are clearly revealed, under consistent and even lighting that emphasizes the straightforward, utilitarian appearance.",
+      "image_path": null,
+      "video_path": "dataset/360/c6b9t9/validate_dataset/videos/2.mp4",
+      "num_inference_steps": 50,
+      "height": 480,
+      "width": 480,
+      "num_frames": 93,
+      "export_fps": 10
+    }
+  ]
+}
