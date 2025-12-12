@@ -1,7 +1,7 @@
-# 🚀[NeurIPS 2025] Temporal In-Context Fine-Tuning for Versatile Control of Video Diffusion Models✨
+# 🚀[NeurIPS 2025] Temporal In-Context Fine-Tuning with Temporal Reasoning for Versatile Control of Video Diffusion Models✨
 
 ## 📑Paper
-- Arxiv: [Temporal In-Context Fine-Tuning for Versatile Control of Video Diffusion Models](https://arxiv.org/abs/2506.00996)
+- Arxiv: [Temporal In-Context Fine-Tuning with Temporal Reasoning for Versatile Control of Video Diffusion Models](https://arxiv.org/abs/2506.00996)
 
 ## 🌐Project Page
 - [TIC-FT Project Page](https://kinam0252.github.io/TIC-FT/)
